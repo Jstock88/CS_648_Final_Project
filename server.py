@@ -2,12 +2,10 @@ import asyncio
 import json
 import hmac, hashlib
 from aiocoap import resource, Message, Context
-from collections import deque
 import matplotlib.pyplot as plt
 import datetime
 
 SECRET_KEY = b"super_secret_key"
-window = deque(maxlen=10)
 temperature_log = []
 plot_initialized = False
 fig = None
@@ -19,9 +17,6 @@ def verify_mac(value, mac):
                         hashlib.sha256).hexdigest()
     return expected == mac
 
-def moving_average(value):
-    window.append(value)
-    return sum(window) / len(window)
 
 def init_plot():
     """Inizializza il grafico in modalità interattiva"""
