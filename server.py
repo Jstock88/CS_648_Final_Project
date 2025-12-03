@@ -3,9 +3,12 @@ import json
 import hmac, hashlib
 from aiocoap import resource, Message, Context
 from collections import deque
+import datetime
+import matplotlib.pyplot as plt
 
 SECRET_KEY = b"super_secret_key"
 window = deque(maxlen=10)
+temperature_log = []
 
 def verify_mac(value, mac):
     expected = hmac.new(SECRET_KEY,
@@ -93,6 +96,25 @@ class TemperatureResource(resource.Resource):
         if not verify_mac(value, mac):
             print("[GATEWAY] INVALID MAC – DATA REJECTED")
             return Message(payload=b"ERROR: invalid MAC")
+        
+        #data collection for visual
+        timestamp = datetime.datetime.now().isoformat()
+        log_entry = {"timestamp": timestamp, "temperature": value}
+        temperature_log.append(log_entry)
+
+        timestamps = [datetime.datetime.fromisoformat(entry["timestamp"]) for entry in temperature_log]
+        temperatures = [entry["temperature"] for entry in temperature_log]
+
+        plt.figure(figsize=(10, 5))
+        plt.plot(timestamps, temperatures, marker='o', linestyle='-', color='b')
+        plt.title("Temperature Over Time")
+        plt.xlabel("Time")
+        plt.ylabel("Temperature (°F)")
+        plt.grid(True)
+        plt.xticks(rotation=45)
+        plt.tight_layout()
+
+        plt.show()
        
         print("[GATEWAY] MAC verification successful")
 
