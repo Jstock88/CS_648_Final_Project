@@ -3,16 +3,15 @@ import json
 import hmac
 import hashlib
 from aiocoap import resource, Message, Context
-from collections import deque
 import matplotlib.pyplot as plt
 import datetime
+import re
+#import base64
 import io
 
 # Secret key for HMAC verification (keep secure in production)
 SECRET_KEY = b"super_secret_key"
 
-# Sliding window for moving average (if needed)
-window = deque(maxlen=10)
 
 # In-memory log of received temperature samples
 temperature_log = []
@@ -32,13 +31,6 @@ def verify_mac(value, mac):
     return expected == mac
 
 
-def moving_average(value):
-    """
-    Maintain a small sliding window and return the current moving average.
-    (Not used by the current code path, kept for potential use.)
-    """
-    window.append(value)
-    return sum(window) / len(window)
 
 
 def init_plot():
@@ -103,6 +95,7 @@ def update_plot():
         print(f"[GATEWAY] Error updating live plot: {e}")
 
 
+#updates plot ayschonously every 0.5 seconds
 async def plot_updater():
     """
     Background async task that periodically calls update_plot to refresh the live plot.
@@ -110,6 +103,7 @@ async def plot_updater():
     while True:
         try:
             update_plot()
+            await asyncio.sleep(0.5)
             await asyncio.sleep(0.5)
         except asyncio.CancelledError:
             break
