@@ -5,7 +5,6 @@ from aiocoap import resource, Message, Context
 import matplotlib.pyplot as plt
 import datetime
 import re
-#import base64
 
 SECRET_KEY = b"super_secret_key"
 temperature_log = []
@@ -23,13 +22,13 @@ def verify_mac(value, mac):
 def init_plot():
     global plot_initialized, fig
     if not plot_initialized:
+        plt.ion()
         fig = plt.figure(figsize=(10, 5))
         plt.title("Temperature Over Time (Live)")
         plt.xlabel("Time")
         plt.ylabel("Temperature (°F)")
         plt.grid(True)
         plot_initialized = True
-        print("[GATEWAY] Grafico inizializzato in modalità live")
 
 def update_plot():
     global plot_initialized, fig, last_update_count
@@ -66,7 +65,7 @@ def update_plot():
         last_update_count = len(temperature_log)
         
     except Exception as e:
-        print(f"[GATEWAY] Errore nell'aggiornamento del grafico: {e}")
+        print(f"Error with updating plot: {e}")
 
 #updates plot ayschonously every 0.5 seconds
 async def plot_updater():
@@ -77,7 +76,7 @@ async def plot_updater():
         except asyncio.CancelledError:
             break
         except Exception as e:
-            print(f"[GATEWAY] Errore nel plot_updater: {e}")
+            print(f"Error : {e}")
             await asyncio.sleep(1)
 
 def visualize_temperature(save_path=None):
