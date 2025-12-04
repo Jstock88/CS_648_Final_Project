@@ -6,13 +6,22 @@ import matplotlib.pyplot as plt
 import datetime
 import re
 
+# Secret key for HMAC verification (keep secure in production)
 SECRET_KEY = b"super_secret_key"
+
+# In-memory log of received temperature samples
 temperature_log = []
+
+# Plot state for live display
 plot_initialized = False
 fig = None
 last_update_count = 0
 
 def verify_mac(value, mac):
+    """
+    Verify HMAC-SHA256 of the numeric value using SECRET_KEY.
+    Returns True if the provided mac matches the expected value.
+    """
     expected = hmac.new(SECRET_KEY,
                         str(value).encode(),
                         hashlib.sha256).hexdigest()
@@ -20,6 +29,10 @@ def verify_mac(value, mac):
 
 
 def init_plot():
+    """
+    Initialize a matplotlib figure for interactive (live) plotting.
+    This enables real-time updates when update_plot is called frequently.
+    """
     global plot_initialized, fig
     if not plot_initialized:
         plt.ion()
@@ -31,6 +44,10 @@ def init_plot():
         plot_initialized = True
 
 def update_plot():
+    """
+    Redraw the live plot if there are new temperature entries.
+    This function is safe to call frequently; it skips redraws when no new data exists.
+    """
     global plot_initialized, fig, last_update_count
     if not plot_initialized:
         init_plot()
@@ -80,6 +97,11 @@ async def plot_updater():
             await asyncio.sleep(1)
 
 def visualize_temperature(save_path=None):
+    """
+    Generate a static PNG of the recorded temperatures.
+    If save_path is provided, the image is written to disk; otherwise it is shown.
+    Returns True on success, False when no data is available.
+    """
     if not temperature_log:
         print("[GATEWAY] Nessun dato di temperatura da visualizzare")
         return False
@@ -106,7 +128,10 @@ def visualize_temperature(save_path=None):
     return True
 
 class TemperatureResource(resource.Resource):
-
+    """
+    CoAP resource that accepts PUT requests with temperature data.
+    Expected payload: JSON containing a temperature value and a MAC (HMAC) for verification.
+    """
 
     async def render_put(self, request):
         try:
@@ -182,8 +207,10 @@ class TemperatureResource(resource.Resource):
         return Message(payload=b"OK")
 
 
-#Main function to 
 async def main():
+    """
+    Start the CoAP server, initialize live plotting, and run until interrupted.
+    """
     init_plot()
     
     plot_task = asyncio.create_task(plot_updater())
