@@ -30,7 +30,7 @@ def verify_mac(value, mac):
 
 def init_plot():
     """
-    Initialize a matplotlib figure for interactive (live) plotting.
+    Initialize a matplotlib figure for interactive plotting.
     This enables real-time updates when update_plot is called frequently.
     """
     global plot_initialized, fig
@@ -46,7 +46,6 @@ def init_plot():
 def update_plot():
     """
     Redraw the live plot if there are new temperature entries.
-    This function is safe to call frequently; it skips redraws when no new data exists.
     """
     global plot_initialized, fig, last_update_count
     if not plot_initialized:
@@ -96,36 +95,6 @@ async def plot_updater():
             print(f"Error : {e}")
             await asyncio.sleep(1)
 
-def visualize_temperature(save_path=None):
-    """
-    Generate a static PNG of the recorded temperatures.
-    If save_path is provided, the image is written to disk; otherwise it is shown.
-    Returns True on success, False when no data is available.
-    """
-    if not temperature_log:
-        print("[GATEWAY] Nessun dato di temperatura da visualizzare")
-        return False
-    
-    timestamps = [datetime.datetime.fromisoformat(entry["timestamp"]) for entry in temperature_log]
-    temperatures = [entry["temperature"] for entry in temperature_log]
-    
-    plt.figure(figsize=(10, 5))
-    plt.plot(timestamps, temperatures, marker='o', linestyle='-', color='b')
-    plt.title("Temperature Over Time")
-    plt.xlabel("Time")
-    plt.ylabel("Temperature (°F)")
-    plt.grid(True)
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-    
-    if save_path:
-        plt.savefig(save_path)
-        plt.close()
-        print(f"[GATEWAY] Grafico salvato in {save_path}")
-    else:
-        plt.show()
-    
-    return True
 
 class TemperatureResource(resource.Resource):
     """
